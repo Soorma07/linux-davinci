@@ -6,6 +6,7 @@
 #include <linux/sched.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
+#include <linux/gpio.h>
 #include <linux/fs.h>
 #include <asm/uaccess.h>	/* for put_user */
 
@@ -31,6 +32,8 @@ static int Device_Open = 0;	/* Is device open?
 				 * Used to prevent multiple access to device */
 static char msg[BUF_LEN];	/* The msg the device will give when asked */
 static char *msg_Ptr;
+static char led_state = 0;
+static char leds_ok = 0;
 
 static struct file_operations fops = {
     .read = device_read,
@@ -59,6 +62,29 @@ static int __init quux_init(void)
     system(msg);  THIS DOES NOT WORK
     */
 
+    // LeopardBoard LEDs
+    leds_ok = gpio_request(57, "LED1");
+    if (!leds_ok) {
+        printk(KERN_INFO "Unable to request LED1\n");
+        goto bail;
+    }
+    leds_ok = gpio_direction_output(57, led_state);
+    if (!leds_ok) {
+        printk(KERN_INFO "Unable to make LED1 an output\n");
+        goto bail;
+    }
+    leds_ok = gpio_request(58, "LED2");
+    if (!leds_ok) {
+        printk(KERN_INFO "Unable to request LED2\n");
+        goto bail;
+    }
+    leds_ok = gpio_direction_output(58, led_state);
+    if (!leds_ok) {
+        printk(KERN_INFO "Unable to make LED2 an output\n");
+        goto bail;
+    }
+
+ bail:
     return SUCCESS;
 }
 
@@ -136,6 +162,12 @@ static ssize_t device_read(struct file *filp,	/* see include/linux/fs.h   */
      * Number of bytes actually written to the buffer
      */
     int bytes_read = 0;
+
+    if (leds_ok) {
+        led_state = !led_state;
+        gpio_set_value(57, led_state);
+        gpio_set_value(58, led_state);
+    }
 
     /*
      * If we're at the end of the message,
