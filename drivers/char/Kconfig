@@ -627,5 +627,12 @@ config TILE_SROM
 	  device appear much like a simple EEPROM, and knows
 	  how to partition a single ROM for multiple purposes.
 
+config QUUX
+	tristate "Example character driver, toggles Leopard DM368 LEDs"
+	default m
+	---help---
+	  This device prints out stuff to make sure it's working, and
+	  toggles LEDs on the Leopard DM368 board.
+
 endmenu
 

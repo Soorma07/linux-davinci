@@ -1,3 +1,51 @@
+Here's the procedure for building a Linux kernel for the LeopardBoard.
+
+  make distclean
+  make ARCH=arm davinci_all_defconfig
+  make ARCH=arm CROSS_COMPILE=arm-linux-eabi- uImage
+  make ARCH=arm CROSS_COMPILE=arm-linux-eabi- modules
+
+I haven't succeeded yet in building an executable from C using the cross-compiler
+that can be loaded into the ramdisk.gz image and run from the command line, but
+I believe I can write C code in a kernel module, baked into the kernel, and then
+call it from a shell script. So that's my plan for the time being. Ultimately I
+would like to build working standalone executables, and hopefully I'll figure
+that out eventually.
+
+Meanwhile the experiment I'm doing is in drivers/char/quux.c. I've also modded
+drivers/char/Makefile. But I don't yet think I've got it quite all  figured out.
+
+So let's look at what happens with the gadgetfs driver. When we build modules,
+we get a file called drivers/usb/gadget/gadgetfs.ko, because the file
+arch/arm/configs/davinci_all_defconfig defines "CONFIG_USB_GADGETFS=m" so that
+gadgetfs.ko becomes a loadable module. Now in drivers/usb/gadget/Kconfig we have
+the "config USB_GADGETFS" piece that chooses options. Finally in
+drivers/usb/gadget/Makefile we have "obj-$(CONFIG_USB_GADGETFS) += gadgetfs.o"
+which is where we decide whether gadgetfs.o will become statically linked into
+the kernel (obj-y) or a *.ko module (obj-m). I think I need to do those same
+things with quux. So I've coerced quux to be part of the obj-m target, which
+has resulted in a quux.ko file when I rebuilt modules.
+
+When I put that quux.ko in the ramdisk image in the /root directory, things
+work SPLENDIDLY.
+
+  (none) login: root
+  # insmod quux.ko
+  quux major=253
+  Try: mknod /dev/quux c 253 0
+  # mknod /dev/quux c 253 0
+  # cat /dev/quux
+  Kernel module says: Hello world!
+  # cat /dev/quux
+  I already told you 1 times Hello world!
+  # cat /dev/quux
+  I already told you 2 times Hello world!
+
+The insmod and mknod operations should be done in a startup script which
+live in /etc/rc.d/rcS.d or /etc/init.d.
+
+###############################################################################
+
 	Linux kernel release 3.x <http://kernel.org/>
 
 These are the release notes for Linux version 3.  Read them carefully,
