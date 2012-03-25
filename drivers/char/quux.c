@@ -1,13 +1,14 @@
 /*
  *  quux.c: Creates a read-only char device that says how many times
- *  you've read from the dev file
+ *  you've read from the dev file, and runs the LEDs.
  */
 
 #include <linux/sched.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
+#include <linux/gpio.h>
 #include <linux/fs.h>
-#include <asm/uaccess.h>	/* for put_user */
+#include <asm/uaccess.h>	/* for get_user, put_user */
 
 MODULE_AUTHOR("Will Ware");
 MODULE_DESCRIPTION("Char driver example");
@@ -31,6 +32,7 @@ static int Device_Open = 0;	/* Is device open?
 				 * Used to prevent multiple access to device */
 static char msg[BUF_LEN];	/* The msg the device will give when asked */
 static char *msg_Ptr;
+static int read_counter = 0;
 
 static struct file_operations fops = {
     .read = device_read,
@@ -54,10 +56,14 @@ static int __init quux_init(void)
     printk(KERN_INFO "quux major=%d\n", Major);
     printk(KERN_INFO "Try: mknod /dev/%s c %d 0\n", DEVICE_NAME, Major);
 
-    /*
-    sprintf(msg, "mknod /dev/quux %d 0", Major);
-    system(msg);  THIS DOES NOT WORK
-    */
+    // LeopardBoard LEDs
+    // these functions return zero when things go well
+    // this is the only device that will want to talk to the LEDs, so I'm
+    // not bothering to check return values as I should.
+    gpio_request(57, "LED1");
+    gpio_direction_output(57, 0);
+    gpio_request(58, "LED2");
+    gpio_direction_output(58, 0);
 
     return SUCCESS;
 }
@@ -70,14 +76,9 @@ static void __exit quux_exit(void)
     /*
      * Unregister the device
      */
-
-    /*
-      This didn't work for me!
-      int ret = unregister_chrdev(Major, DEVICE_NAME);
-      if (ret < 0)
-      printk(KERN_ALERT "Error in unregister_chrdev: %d\n", ret);
-    */
     unregister_chrdev(Major, DEVICE_NAME);
+    gpio_free(57);
+    gpio_free(58);
 }
 
 /*
@@ -90,17 +91,16 @@ static void __exit quux_exit(void)
  */
 static int device_open(struct inode *inode, struct file *file)
 {
-    static int counter = 0;
-
     if (Device_Open)
         return -EBUSY;
 
     Device_Open++;
-    if (counter == 0)
+    if (read_counter == 0)
         sprintf(msg, "Kernel module says: Hello world!\n");
+    else if (read_counter == 1)
+        sprintf(msg, "I already said Hello world!\n");
     else
-        sprintf(msg, "I already told you %d times Hello world!\n", counter);
-    counter++;
+        sprintf(msg, "I already said %d times Hello world!\n", read_counter);
     msg_Ptr = msg;
     try_module_get(THIS_MODULE);
 
@@ -144,6 +144,10 @@ static ssize_t device_read(struct file *filp,	/* see include/linux/fs.h   */
     if (*msg_Ptr == 0)
         return 0;
 
+    gpio_set_value(57, read_counter & 1);
+    gpio_set_value(58, read_counter & 2);
+    read_counter++;
+
     /*
      * Actually put the data into the buffer
      */
@@ -167,14 +171,32 @@ static ssize_t device_read(struct file *filp,	/* see include/linux/fs.h   */
     return bytes_read;
 }
 
-/*
- * Called when a process writes to dev file: echo "hi" > /dev/quux
+/* 
+ * This function is called when somebody tries to write into our device file.
+ * This is cribbed and modified from
+ * http://www.linuxtopia.org/online_books/Linux_Kernel_Module_Programming_Guide/x872.html
  */
 static ssize_t
-device_write(struct file *filp, const char *buff, size_t len, loff_t * off)
+device_write(struct file *file,
+	     const char __user * buffer, size_t length, loff_t * offset)
 {
-    printk(KERN_ALERT "Sorry, this operation isn't supported.\n");
-    return -EINVAL;
+	char x;
+
+#ifdef DEBUG
+	printk(KERN_INFO "device_write(%p,%s,%d)", file, buffer, length);
+#endif
+
+	// get the first byte of the text coming in
+	get_user(x, buffer);
+
+	// use the two low bits to set the LEDs
+	gpio_set_value(57, x & 1);
+	gpio_set_value(58, x & 2);
+
+	/* 
+	 * Return the number of input characters used 
+	 */
+	return length;
 }
 
 module_init(quux_init);
