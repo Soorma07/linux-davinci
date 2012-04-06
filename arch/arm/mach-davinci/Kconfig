@@ -100,6 +100,14 @@ config MACH_DM355_LEOPARD
 	  Configure this option to specify the whether the board used
 	  for development is a DM355 Leopard board.
 
+config MACH_DAVINCI_DM365_LEOPARD
+	bool "Leopard DM365 Board"
+	default n
+	depends on ARCH_DAVINCI_DM365
+	help
+	  Configure this option to specify the whether the board used
+	  for development is a Leopard DM365 Board
+
 config MACH_DAVINCI_DM6467_EVM
 	bool "TI DM6467 EVM"
 	default ARCH_DAVINCI_DM646x
