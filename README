@@ -1,3 +1,28 @@
+Trying to build the video drivers for the TVP7002 and the VPFE ISIF. The accepted
+approach is to write a config file (arch/arm/configs/leopard368_defconfig) and run
+it through the standard Linux kconfig machinery, which is the stuff you see with
+"make menuconfig" or "make gconfig". Theoretically this resolves all possible
+incompatibilities between things.
+
+I have been banging on this for a while now, trying to get these two options to
+play nice, with no luck:
+  CONFIG_VIDEO_VPFE_CAPTURE=m
+  CONFIG_VIDEO_ISIF=m
+The TVP7002 driver for the video input board is getting properly configured but
+there's some problem with these. Further investigation probably means going into
+scripts/config and trying to add a bunch of debug statements to the very confusion
+kconf code, half of which is Lex/Yacc stuff that's very hard to debug.
+
+So the cheesy ugly cheating way is to go into the Makefiles and change from
+  obj-$(CONFIG_VIDEO_ISIF) += isif.o
+to
+  obj-m += isif.o
+and while I've tried to avoid it, I've concluded that it's unavoidable. The
+unfortunate thing is that you're then left to manage all dependency issues by
+hand.
+
+###############################################################################
+
 Here's the procedure for building a Linux kernel for the LeopardBoard.
 
   make distclean

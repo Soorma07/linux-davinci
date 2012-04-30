@@ -15,12 +15,16 @@ videodev-objs	:=	v4l2-dev.o v4l2-ioctl.o v4l2-device.o v4l2-fh.o \
 
 # V4L2 core modules
 
-obj-$(CONFIG_VIDEO_DEV) += videodev.o v4l2-int-device.o
+obj-y += $(videodev-objs)
+
+#obj-$(CONFIG_VIDEO_DEV) += videodev.o v4l2-int-device.o
+obj-$(CONFIG_VIDEO_DEV) += v4l2-int-device.o
 ifeq ($(CONFIG_COMPAT),y)
   obj-$(CONFIG_VIDEO_DEV) += v4l2-compat-ioctl32.o
 endif
 
-obj-$(CONFIG_VIDEO_V4L2_COMMON) += v4l2-common.o
+#obj-$(CONFIG_VIDEO_V4L2_COMMON) += v4l2-common.o
+obj-y += v4l2-common.o
 
 # All i2c modules must come first:
 
@@ -50,7 +54,8 @@ obj-$(CONFIG_VIDEO_THS7303) += ths7303.o
 obj-$(CONFIG_VIDEO_VINO) += indycam.o
 obj-$(CONFIG_VIDEO_TVP5150) += tvp5150.o
 obj-$(CONFIG_VIDEO_TVP514X) += tvp514x.o
-obj-$(CONFIG_VIDEO_TVP7002) += tvp7002.o
+#obj-$(CONFIG_VIDEO_TVP7002) += tvp7002.o
+obj-m += tvp7002.o
 obj-$(CONFIG_VIDEO_MSP3400) += msp3400.o
 obj-$(CONFIG_VIDEO_CS5345) += cs5345.o
 obj-$(CONFIG_VIDEO_CS53L32A) += cs53l32a.o
@@ -116,12 +121,18 @@ obj-$(CONFIG_VIDEO_HEXIUM_ORION) += hexium_orion.o
 obj-$(CONFIG_VIDEO_HEXIUM_GEMINI) += hexium_gemini.o
 obj-$(CONFIG_VIDEO_TIMBERDALE)	+= timblogiw.o
 
-obj-$(CONFIG_VIDEOBUF_GEN) += videobuf-core.o
-obj-$(CONFIG_VIDEOBUF_DMA_SG) += videobuf-dma-sg.o
-obj-$(CONFIG_VIDEOBUF_DMA_CONTIG) += videobuf-dma-contig.o
-obj-$(CONFIG_VIDEOBUF_VMALLOC) += videobuf-vmalloc.o
-obj-$(CONFIG_VIDEOBUF_DVB) += videobuf-dvb.o
-obj-$(CONFIG_VIDEO_BTCX)  += btcx-risc.o
+#obj-$(CONFIG_VIDEOBUF_GEN) += videobuf-core.o
+#obj-$(CONFIG_VIDEOBUF_DMA_SG) += videobuf-dma-sg.o
+#obj-$(CONFIG_VIDEOBUF_DMA_CONTIG) += videobuf-dma-contig.o
+#obj-$(CONFIG_VIDEOBUF_VMALLOC) += videobuf-vmalloc.o
+#obj-$(CONFIG_VIDEOBUF_DVB) += videobuf-dvb.o
+#obj-$(CONFIG_VIDEO_BTCX)  += btcx-risc.o
+obj-y += videobuf-core.o
+obj-y += videobuf-dma-sg.o
+obj-y += videobuf-dma-contig.o
+obj-y += videobuf-vmalloc.o
+obj-y += videobuf-dvb.o
+obj-y += btcx-risc.o
 
 obj-$(CONFIG_VIDEOBUF2_CORE)		+= videobuf2-core.o
 obj-$(CONFIG_VIDEOBUF2_MEMOPS)		+= videobuf2-memops.o

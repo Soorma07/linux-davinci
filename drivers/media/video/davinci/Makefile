@@ -11,10 +11,13 @@ obj-$(CONFIG_DISPLAY_DAVINCI_DM646X_EVM) += vpif_display.o
 obj-$(CONFIG_CAPTURE_DAVINCI_DM646X_EVM) += vpif_capture.o
 
 # Capture: DM6446 and DM355
-obj-$(CONFIG_VIDEO_VPSS_SYSTEM) += vpss.o
-obj-$(CONFIG_VIDEO_VPFE_CAPTURE) += vpfe_capture.o
+#obj-$(CONFIG_VIDEO_VPSS_SYSTEM) += vpss.o
+obj-y += vpss.o
+#obj-$(CONFIG_VIDEO_VPFE_CAPTURE) += vpfe_capture.o
+obj-m += vpfe_capture.o
 obj-$(CONFIG_VIDEO_DM6446_CCDC) += dm644x_ccdc.o
 obj-$(CONFIG_VIDEO_DM355_CCDC) += dm355_ccdc.o
-obj-$(CONFIG_VIDEO_ISIF) += isif.o
+#obj-$(CONFIG_VIDEO_ISIF) += isif.o
+obj-m += isif.o
 obj-$(CONFIG_VIDEO_DM644X_VPBE) += vpbe.o vpbe_osd.o vpbe_venc.o
 obj-$(CONFIG_VIDEO_VPBE_DISPLAY) += vpbe_display.o
