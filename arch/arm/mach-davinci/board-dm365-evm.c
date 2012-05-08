@@ -41,7 +41,7 @@
 #include <mach/nand.h>
 #include <mach/keyscan.h>
 
-#include <media/tvp514x.h>
+#include <media/tvp7002.h>
 
 static inline int have_imager(void)
 {
@@ -185,15 +185,17 @@ static void dm365evm_mmc_configure(void)
 	davinci_cfg_reg(DM365_SD1_DATA0);
 }
 
-static struct tvp514x_platform_data tvp5146_pdata = {
+static struct tvp7002_config tvp7002_cfg = {
 	.clk_polarity = 0,
-	.hs_polarity = 1,
-	.vs_polarity = 1
+	.hs_polarity = 0,
+	.vs_polarity = 0,
+	.sog_polarity = 0,
+	.fid_polarity = 0
 };
 
 #define TVP514X_STD_ALL        (V4L2_STD_NTSC | V4L2_STD_PAL)
 /* Inputs available at the TVP5146 */
-static struct v4l2_input tvp5146_inputs[] = {
+static struct v4l2_input tvp7002_inputs[] = {
 	{
 		.index = 0,
 		.name = "Composite",
@@ -211,26 +213,26 @@ static struct v4l2_input tvp5146_inputs[] = {
 /*
  * this is the route info for connecting each input to decoder
  * ouput that goes to vpfe. There is a one to one correspondence
- * with tvp5146_inputs
+ * with tvp7002_inputs
  */
-static struct vpfe_route tvp5146_routes[] = {
+static struct vpfe_route tvp7002_routes[] = {
 	{
-		.input = INPUT_CVBS_VI2B,
-		.output = OUTPUT_10BIT_422_EMBEDDED_SYNC,
+		.input = 0, // INPUT_CVBS_VI2B,
+		.output = 0, // OUTPUT_10BIT_422_EMBEDDED_SYNC,
 	},
 {
-		.input = INPUT_SVIDEO_VI2C_VI1C,
-		.output = OUTPUT_10BIT_422_EMBEDDED_SYNC,
+		.input = 0, // INPUT_SVIDEO_VI2C_VI1C,
+		.output = 0, // OUTPUT_10BIT_422_EMBEDDED_SYNC,
 	},
 };
 
 static struct vpfe_subdev_info vpfe_sub_devs[] = {
 	{
-		.name = "tvp5146",
+		.name = "tvp7002",
 		.grp_id = 0,
-		.num_inputs = ARRAY_SIZE(tvp5146_inputs),
-		.inputs = tvp5146_inputs,
-		.routes = tvp5146_routes,
+		.num_inputs = ARRAY_SIZE(tvp7002_inputs),
+		.inputs = tvp7002_inputs,
+		.routes = tvp7002_routes,
 		.can_route = 1,
 		.ccdc_if_params = {
 			.if_type = VPFE_BT656,
@@ -238,8 +240,8 @@ static struct vpfe_subdev_info vpfe_sub_devs[] = {
 			.vdpol = VPFE_PINPOL_POSITIVE,
 		},
 		.board_info = {
-			I2C_BOARD_INFO("tvp5146", 0x5d),
-			.platform_data = &tvp5146_pdata,
+			I2C_BOARD_INFO("tvp7002", 0x5d),
+			.platform_data = &tvp7002_cfg,
 		},
 	},
 };
